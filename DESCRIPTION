@@ -1,0 +1,16 @@
+Package: bayesKMtools
+Title: Bayesian Kaplan–Meier Utilities
+Version: 0.0.1
+Authors@R: person("Pan", "Tianyu", email = "tianyup2@stanford.edu",
+                  role = c("aut", "cre"))
+Description: Functions to sample discrete-time hazards, compute log-hazard
+  ratios and plot posterior survival curves alongside the Kaplan–Meier estimate.
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    survival,
+    tibble,
+    ggplot2,
+    scales
+RoxygenNote: 7.3.2
