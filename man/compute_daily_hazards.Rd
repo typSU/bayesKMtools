@@ -9,6 +9,7 @@ compute_daily_hazards(
   status,
   a0 = 0.001,
   b0 = 1,
+  maxT = max(time),
   n_samp = 10000,
   progress = TRUE
 )
@@ -26,6 +27,10 @@ of events on each day (default is \code{0.001}).}
 
 \item{b0}{Positive numeric value giving the prior shape parameter for the number
 of non‑events on each day (default is \code{1}).}
+
+\item{maxT}{A positive integer giving the upper bound of the discretized
+follow-up time. This value defines the largest day index in the time grid
+and therefore the maximum possible survival time considered in the analysis.}
 
 \item{n_samp}{Integer; the number of Monte Carlo samples to draw from each
 Beta posterior distribution (default is \code{10000}).}

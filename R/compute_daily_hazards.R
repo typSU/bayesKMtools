@@ -19,6 +19,9 @@
 #'   of events on each day (default is \code{0.001}).
 #' @param b0 Positive numeric value giving the prior shape parameter for the number
 #'   of non‑events on each day (default is \code{1}).
+#' @param maxT A positive integer giving the upper bound of the discretized
+#'   follow-up time. This value defines the largest day index in the time grid
+#'   and therefore the maximum possible survival time considered in the analysis.
 #' @param n_samp Integer; the number of Monte Carlo samples to draw from each
 #'   Beta posterior distribution (default is \code{10000}).
 #' @param progress Logical; if \code{TRUE} (the default) a progress bar is displayed.
@@ -37,6 +40,7 @@
 compute_daily_hazards <- function(time, status,
                                   a0 = 0.001,
                                   b0 = 1,
+                                  maxT = max(time),
                                   n_samp = 10000,
                                   progress = TRUE) {
   # basic input checks
