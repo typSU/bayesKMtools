@@ -1,0 +1,57 @@
+#' Compute posterior differences in restricted mean survival time
+#'
+#' Given posterior draws of discrete hazard probabilities for a treatment and
+#' a control group, \code{compute_rmst_difference()} calculates the difference
+#' in restricted mean survival time (RMST) up to a prespecified time horizon
+#' for each draw.  It does so by converting each row of the hazard matrices
+#' into a survival function via the cumulative product of \eqn{1 - p_k} and
+#' summing the resulting survival probabilities up to \code{t_max}.
+#'
+#' @param hazard_trt Numeric matrix of dimension \code{n_draws × K} containing
+#'   posterior hazard draws for the treatment group.  Each row represents one
+#'   draw and each column corresponds to a day on the discrete time grid.
+#' @param hazard_ctrl Numeric matrix of the same dimension as \code{hazard_trt}
+#'   containing hazard draws for the control group.
+#' @param t_max Integer specifying the time horizon up to which the RMST is
+#'   computed.  Must be less than or equal to the number of columns of the
+#'   hazard matrices.
+#'
+#' @return A numeric vector of length \code{n_draws}.  Each element is the
+#'   difference in RMST (treatment minus control) for one posterior draw.
+#'
+#' @examples
+#' # Example with two posterior draws on a four-day grid
+#' hz_trt  <- matrix(c(0.10, 0.05, 0.02, 0.01,
+#'                     0.08, 0.04, 0.03, 0.02),
+#'                   nrow = 2, byrow = TRUE)
+#' hz_ctrl <- matrix(c(0.12, 0.07, 0.03, 0.02,
+#'                     0.10, 0.06, 0.04, 0.03),
+#'                   nrow = 2, byrow = TRUE)
+#' diff_rmst <- compute_rmst_difference(hz_trt, hz_ctrl, t_max = 4)
+#' diff_rmst
+#' #> [1] -0.03 -0.04
+#'
+#' @export
+compute_rmst_difference <- function(hazard_trt, hazard_ctrl, t_max) {
+  # Input checks
+  if (!is.matrix(hazard_trt) || !is.matrix(hazard_ctrl)) {
+    stop("hazard_trt and hazard_ctrl must be numeric matrices")
+  }
+  if (!identical(dim(hazard_trt), dim(hazard_ctrl))) {
+    stop("hazard_trt and hazard_ctrl must have the same dimensions")
+  }
+  K <- ncol(hazard_trt)
+  if (t_max > K) {
+    stop("t_max must be less than or equal to the number of columns of the hazard matrices")
+  }
+  # Convert hazards to survival probabilities and accumulate
+  surv_trt  <- 1 - hazard_trt[, seq_len(t_max), drop = FALSE]
+  surv_ctrl <- 1 - hazard_ctrl[, seq_len(t_max), drop = FALSE]
+  surv_trt  <- t(apply(surv_trt,  1, cumprod))
+  surv_ctrl <- t(apply(surv_ctrl, 1, cumprod))
+  # Sum survival probabilities to obtain RMST
+  rmst_trt  <- rowSums(surv_trt)
+  rmst_ctrl <- rowSums(surv_ctrl)
+  # Difference in RMST between treatment and control
+  rmst_trt - rmst_ctrl
+}
