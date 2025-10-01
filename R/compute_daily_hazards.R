@@ -58,7 +58,7 @@ compute_daily_hazards <- function(time, status,
   }
 
   # maximum day defines the number of columns (assumes integer days starting at 1)
-  K <- max(time)
+  K <- maxT
   # number of events on each day
   num_events <- tabulate(time[status == 1], nbins = K)
   # number at risk at the start of each day: count subjects with time >= day
