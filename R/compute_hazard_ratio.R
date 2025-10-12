@@ -13,7 +13,7 @@
 #' D = \sum_{k=1}^K
 #'       \frac{R^{(t)}(k)\, R^{(c)}(k)}{R^{(c)}(k) + \exp(\beta)\, R^{(t)}(k)}
 #'       p^{(c)}_k.}
-#' Here \eqn{R^{(t)}(k)} and \eqn{R^{(c)}(k)} denote the numbers at risk in the
+#' Here \deqn{R^{(t)}(k)} and \deqn{R^{(c)}(k)} denote the numbers at risk in the
 #' treatment and control groups at day \eqn{k}.
 #' The function iterates to convergence for each draw and returns a vector of
 #' log‑hazard ratios.  You can exponentiate these to obtain a posterior
