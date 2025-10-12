@@ -50,7 +50,7 @@
 plot_survival_with_km <- function(time, status,
                                   time_grid, hazard_draws,
                                   ylim = c(0, 1),
-                                  burn = 5000,
+                                  burn = 0,
                                   n_sample = 100,
                                   seed = 1,
                                   palette_option = "viridis",

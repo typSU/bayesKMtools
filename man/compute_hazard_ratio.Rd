@@ -53,6 +53,7 @@ where
 D = \sum_{k=1}^K
       \frac{R^{(t)}(k)\, R^{(c)}(k)}{R^{(c)}(k) + \exp(\beta)\, R^{(t)}(k)}
       p^{(c)}_k.}
+\deqn{R^{(t)}(k) and R^{(c)}(k) respectively denote the at-risk sizes on day $k$ of treatment and control groups}
 The function iterates to convergence for each draw and returns a vector of
 log‑hazard ratios.  You can exponentiate these to obtain a posterior
 distribution for the hazard ratio itself.
