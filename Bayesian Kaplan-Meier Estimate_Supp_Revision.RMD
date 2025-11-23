@@ -1,0 +1,149 @@
+---
+title: "Supplementary File of Bayesian Counterparts to the Frequentist Kaplan-Meier Estimate and its Summary Measures for Comparative Heart Failure Clinical Studies"
+output:
+  html_document: default
+  pdf_document: default
+date: "2025-10-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Coding Examples
+
+In this file, we use simulated data to illustrate how to use the proposed Bayesian method to
+
+(1) obtain posterior distribution of a survival curve;
+
+(2) obtain posterior distribution of the hazard ratio for two group comparison;
+
+(3) obtain posterior distribution of the RMST difference for two group comparison;
+
+(4) obtain point estimator (posterior mean) for survival curve;
+
+(5) obtain point estimator (posterior median) and 95% credible interval for hazard ratio and RMST difference.
+
+
+### A Minimal Example of Implementing Our Method
+
+```{r}
+# install the package
+remotes::install_github("typSU/bayesKMtools", force=TRUE)
+# run the following commands for detailed information of the functions
+ ?bayesKMtools::bayesKMtools
+ ?bayesKMtools::compute_daily_hazards
+```
+
+Suppose that the hazard function of the true survival time $T'_i$ is $h(t) = \exp\{t/(400 + 400 \times \text{treat})\}$, and the categorized discrete survival time $T_i = \text{ceiling}(T'_i).$   
+
+
+Simulate $n=1000$ discrete survival times for two groups
+
+```{r}
+library(bayesKMtools)
+set.seed(1)
+
+## 1. Simulate discrete-time survival data for two groups
+n    <- 1e3
+trt  <- rbinom(n, 1, 0.5)  # 1 = treatment, 0 = control
+# event times: shorter for control, longer for treatment
+t0   <- ceiling((-log(1 - runif(n = sum(trt == 0))) * 800)^(1/2))
+t1   <- ceiling((-log(1 - runif(n = sum(trt == 1))) * 1600)^(1/2))
+time <- numeric(n)
+time[trt == 0] <- t0
+time[trt == 1] <- t1
+# random right-censoring
+cens   <- ceiling(runif(n, 0, 40))
+obs    <- pmin(time, cens)
+status <- as.integer(time <= cens)
+
+```  
+
+
+Draw posterior daily hazards by treatment group, where the prior for daily hazard is $Beta(a_0, b_0)=Beta(0.001, 1),$ which can be adjusted by users, and the number of random draws is "n_sample".
+
+
+```{r}
+## 2. Draw posterior daily hazards for each group
+haz_ctrl <- compute_daily_hazards(obs[trt == 0], status[trt == 0],
+                                  a0 = 0.001, b0 = 1, n_samp = 2000, 
+                                  maxT = max(obs), progress = FALSE)
+haz_trt  <- compute_daily_hazards(obs[trt == 1], status[trt == 1],
+                                  a0 = 0.001, b0 = 1, n_samp = 2000, 
+                                  maxT = max(obs), progress = FALSE)
+
+```  
+
+
+Plot the Kaplan-Meier survival curve (frequentist), the posterior mean survival curve and sampled survival curves from the posterior distribution (the number of samples is "n_sample").  
+
+
+```{r}
+## 3. Plot Kaplan–Meier, posterior mean, and sampled survival curves
+time_grid <- 1:max(obs)
+# Control group
+plot_survival_with_km(obs[trt == 0], status[trt == 0],
+                      time_grid     = time_grid,
+                      hazard_draws  = haz_ctrl,
+                      n_sample      = 10,    # show 10 sampled survival curves
+                      title         = "Control group")
+
+# Treatment group
+plot_survival_with_km(obs[trt == 1], status[trt == 1],
+                      time_grid     = time_grid,
+                      hazard_draws  = haz_trt,
+                      n_sample      = 10,
+                      title         = "Treatment group")
+```  
+
+Generate posterior samples of hazard ratio. Here "trt" and "obs" as the input are the treatment assignment and observed event time (subject to right censoring) from data used to generate the posterior samples of daily hazards from two groups, respectively.
+
+
+```{r}
+## 4. Compute the posterior hazard ratio using the obtained hazards
+log_hr       <- compute_hazard_ratio(trt, obs, haz_trt, haz_ctrl)
+hr           <- exp(log_hr)
+hist(hr,
+     xlab = "hazard ratio",main = "")
+
+mtext("Density functions approximated by 2500 random samples\n from the posterior distribution of the hazard ratio", side = 3, line = 1, adj = 0, font = 2)
+```  
+
+Generate posterior samples of RMST difference.
+
+
+```{r}
+## 5. Compute the posterior RMST differences using the obtained hazards
+# Compute the per-draw RMST differences (treatment minus control)
+rmst_diff <- compute_rmst_difference(haz_trt, haz_ctrl, max(obs))
+
+hist(rmst_diff,
+     xlab = "difference in RMST (days)",
+     main = "")
+mtext("Density function approximated by posterior samples\n from the distribution of the difference in RMST", 
+      side = 3, line = 1, adj = 0, font = 2)
+```  
+
+
+Generate posterior median and 95% credible interval for hazard ratio and RMST difference.
+
+```{r}
+## 6. Summarizing the posterior samples of hazard ratio and rmst using R package bayestestR
+library(bayestestR)
+describe_posterior(
+  hr,
+  centrality = "median",
+  test = c("p_direction", "p_significance"),
+  verbose = FALSE
+)
+
+describe_posterior(
+  rmst_diff,
+  centrality = "median",
+  test = c("p_direction", "p_significance"),
+  verbose = FALSE
+)
+```  
+
